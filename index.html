@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Solution Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the Inter font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Basic styling for textareas to ensure consistent appearance */
+        textarea {
+            -webkit-appearance: none; /* Remove default styling for better cross-browser consistency */
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center p-4 font-inter">
+    <!-- Main content wrapper -->
+    <div class="bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-screen-lg
+                md:max-w-3xl lg:max-w-4xl xl:max-w-5xl
+                flex flex-col space-y-4 border border-gray-700
+                aspect-video md:aspect-auto">
+
+        <h1 class="text-xl md:text-2xl font-bold text-center text-blue-400 mb-4">Meeting Solution</h1>
+
+        <!-- Input fields section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- TARGET Field -->
+            <div class="flex flex-col">
+                <label for="target" class="text-sm font-medium text-gray-300 mb-1">TARGET</label>
+                <textarea
+                    id="target"
+                    class="w-full p-2 text-sm bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[72px]"
+                    placeholder="e.g., Increase Q3 sales by 15%"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <!-- FACT Field -->
+            <div class="flex flex-col">
+                <label for="fact" class="text-sm font-medium text-gray-300 mb-1">FACT</label>
+                <textarea
+                    id="fact"
+                    class="w-full p-2 text-sm bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[72px]"
+                    placeholder="e.g., Sales are down 5% compared to Q2"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <!-- PROBLEM Field -->
+            <div class="flex flex-col">
+                <label for="problem" class="text-sm font-medium text-gray-300 mb-1">PROBLEM</label>
+                <textarea
+                    id="problem"
+                    class="w-full p-2 text-sm bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[72px]"
+                    placeholder="e.g., Lack of new lead generation strategies"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <!-- MITIGATION (Optional) Field -->
+            <div class="flex flex-col">
+                <label for="mitigation" class="text-sm font-medium text-gray-300 mb-1">MITIGATION (Optional)</label>
+                <textarea
+                    id="mitigation"
+                    class="w-full p-2 text-sm bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[72px]"
+                    placeholder="e.g., We have a new marketing intern starting next week"
+                    rows="3"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-2 mt-4">
+            <button
+                id="clearButton"
+                class="px-6 py-2 bg-red-600 text-white font-semibold rounded-md
+                        hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500
+                        transition duration-200 ease-in-out text-sm"
+            >
+                Erase
+            </button>
+            <button
+                id="generateButton"
+                class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-md
+                        hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
+                        transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+                Generate Solution
+            </button>
+        </div>
+
+        <!-- Loading and Error Messages -->
+        <div id="loadingMessage" class="text-center text-blue-300 text-sm mt-2 hidden">
+            Generating solution, please wait...
+        </div>
+        <div id="errorMessage" class="text-center text-red-400 text-sm mt-2 hidden">
+            <!-- Error message will be inserted here -->
+        </div>
+
+        <!-- Answer Display Area -->
+        <div class="flex flex-col mt-4 flex-grow">
+            <label for="answer" class="text-sm font-medium text-gray-300 mb-1">ANSWER</label>
+            <textarea
+                id="answer"
+                class="w-full p-3 text-sm bg-gray-700 border border-gray-600 rounded-md
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y
+                        min-h-[150px] md:min-h-[200px] flex-grow"
+                readonly
+                placeholder="Your meeting solution will appear here..."
+            ></textarea>
+        </div>
+
+        <!-- Final Conclusion Display Area -->
+        <div class="flex flex-col mt-4">
+            <label for="finalConclusion" class="text-sm font-medium text-gray-300 mb-1">FINAL CONCLUSION</label>
+            <textarea
+                id="finalConclusion"
+                class="w-full p-3 text-sm bg-gray-700 border border-gray-600 rounded-md
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y
+                        min-h-[80px] md:min-h-[100px]"
+                readonly
+                placeholder="A final professional conclusion will appear here."
+            ></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const targetInput = document.getElementById('target');
+        const factInput = document.getElementById('fact');
+        const problemInput = document.getElementById('problem');
+        const mitigationInput = document.getElementById('mitigation');
+        const answerOutput = document.getElementById('answer');
+        const finalConclusionOutput = document.getElementById('finalConclusion');
+        const generateButton = document.getElementById('generateButton');
+        const clearButton = document.getElementById('clearButton');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // State variables (mimicking React's useState)
+        let appState = {
+            target: '',
+            fact: '',
+            problem: '',
+            mitigation: '',
+            answer: '',
+            finalConclusion: '',
+            isLoading: false,
+            error: ''
+        };
+
+        // Function to update the UI based on appState
+        function updateUI() {
+            targetInput.value = appState.target;
+            factInput.value = appState.fact;
+            problemInput.value = appState.problem;
+            mitigationInput.value = appState.mitigation;
+            answerOutput.value = appState.answer;
+            finalConclusionOutput.value = appState.finalConclusion;
+
+            loadingMessage.classList.toggle('hidden', !appState.isLoading);
+            errorMessage.classList.toggle('hidden', !appState.error);
+            errorMessage.textContent = appState.error ? `Error: ${appState.error}` : '';
+
+            // Disable generate button if loading or required fields are empty
+            generateButton.disabled = appState.isLoading || !appState.target || !appState.fact || !appState.problem;
+            generateButton.textContent = appState.isLoading ? 'Generating...' : 'Generate Solution';
+        }
+
+        // Function to handle input changes and update state
+        function handleInputChange(event) {
+            const { id, value } = event.target;
+            appState[id] = value;
+            updateUI(); // Update UI to reflect button disabled state
+        }
+
+        // Attach input listeners
+        targetInput.addEventListener('input', handleInputChange);
+        factInput.addEventListener('input', handleInputChange);
+        problemInput.addEventListener('input', handleInputChange);
+        mitigationInput.addEventListener('input', handleInputChange);
+
+        // Function to clear all input fields and answers
+        function clearAllFields() {
+            appState = {
+                target: '',
+                fact: '',
+                problem: '',
+                mitigation: '',
+                answer: '',
+                finalConclusion: '',
+                isLoading: false,
+                error: ''
+            };
+            updateUI();
+        }
+
+        // Function to handle the API call to Gemini
+        async function generateSolution() {
+            // Basic validation
+            if (!appState.target || !appState.fact || !appState.problem) {
+                appState.error = 'Please fill in Target, Fact, and Problem fields.';
+                appState.isLoading = false;
+                updateUI();
+                return;
+            }
+
+            appState.isLoading = true;
+            appState.error = '';
+            appState.answer = '';
+            appState.finalConclusion = '';
+            updateUI(); // Update UI to show loading state and clear previous results
+
+            const prompt = `Based on the following meeting details, provide a detailed solution and a concise final conclusion.
+
+TARGET: ${appState.target}
+FACT: ${appState.fact}
+PROBLEM: ${appState.problem}
+MITIGATION (Optional): ${appState.mitigation}
+
+Please provide your response in JSON format with two fields: 'solution' (string) and 'finalConclusion' (string).`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+            const payload = {
+                contents: chatHistory,
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "solution": { "type": "STRING" },
+                            "finalConclusion": { "type": "STRING" }
+                        },
+                        "propertyOrdering": ["solution", "finalConclusion"]
+                    }
+                }
+            };
+
+            const apiKey = ""; // Leave this as-is. Canvas will provide the API key at runtime.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const maxRetries = 5;
+            let retryCount = 0;
+            let success = false;
+
+            while (retryCount < maxRetries && !success) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        if (response.status === 429) { // Too Many Requests
+                            const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000; // Exponential backoff with jitter
+                            console.warn(`Rate limit hit. Retrying in ${delay / 1000} seconds...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            retryCount++;
+                            continue; // Try again
+                        }
+                        throw new Error(errorData.message || `Failed to generate solution (HTTP ${response.status}).`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const jsonString = result.candidates[0].content.parts[0].text;
+                        const parsedJson = JSON.parse(jsonString);
+
+                        appState.answer = parsedJson.solution || 'No solution generated.';
+                        appState.finalConclusion = parsedJson.finalConclusion || 'No conclusion generated.';
+                        success = true;
+                    } else {
+                        throw new Error('Unexpected API response structure.');
+                    }
+                } catch (err) {
+                    console.error("Error calling Gemini API:", err);
+                    appState.error = `Failed to generate solution: ${err.message}`;
+                    success = false; // Ensure loop continues if this was not a retryable error
+                    break; // Exit loop on non-retryable errors
+                } finally {
+                    if (success || retryCount >= maxRetries) {
+                        appState.isLoading = false;
+                        updateUI();
+                    }
+                }
+            }
+
+            if (!success && retryCount >= maxRetries) {
+                appState.error = 'Failed to generate solution after multiple retries. Please try again later.';
+                appState.isLoading = false;
+                updateUI();
+            }
+        }
+
+        // Attach event listeners to buttons
+        generateButton.addEventListener('click', generateSolution);
+        clearButton.addEventListener('click', clearAllFields);
+
+        // Initial UI update when the page loads
+        document.addEventListener('DOMContentLoaded', updateUI);
+    </script>
+</body>
+</html>
